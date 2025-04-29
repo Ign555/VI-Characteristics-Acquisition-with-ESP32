@@ -1,11 +1,10 @@
 #include <Arduino.h>
 
+#include "Panneau.hpp"
+
 //*******************************************Initialisation***********************************************************
 
 int pwmChannel = 0;          // Selects channel 0
-const int frequence = 78000; // PWM frequency of 1 KHz
-const int resolution = 10;   // 10-bit resolution, 1024 possible values
-const int pwmPin = 19;       // Pin du changement du rapport cyclique de decoupage de la resistance 22 ohm
 int Pinrelay = 18;           // Pin, du  signal commande relay
 
 float Vcourant_ampli; // Tension amplifier par l'AOP, mesurรฉ sur une entrรฉe esp32
@@ -45,18 +44,12 @@ void sendValues(float *buffer, int start, int end, uint8_t CAN_ID);
 void caracterisationPV(void);
 
 //uint8_t getDIPSwitchInfo(void);
+Panneau panneau();
 
 void setup()
 {
   Serial.begin(115200);
   Serial.println("CARTE VI Mesure Lineaire\n");
-
-  pinMode(Pinrelay, OUTPUT); // Configuration du pรฉriphรฉrique du pinrelay
-  pinMode(pwmPin, OUTPUT);   // Configuaration du pรฉriphรฉrique du Pwm
-
-  ledcSetup(pwmChannel, frequence, resolution); // Assigns the PWM channel to pin 19
-  ledcAttachPin(pwmPin, pwmChannel);            // Create the selected output voltage
-  ledcAttachPin(pwmChannel, 0);                 // ledcAttachPin(pwmChannel, 0); // 3,3V
 }
 
 void loop()
@@ -108,7 +101,8 @@ void serialEvent()
     reception(Serial.read());
   }
 }
- //************************************Initialisation de la Fonction de caractérisation************************************
+
+/************************************Initialisation de la Fonction de caractérisation************************************/
 void caracterisationPV(void) //Fonction de la carctérisation
 {
 
@@ -120,7 +114,7 @@ void caracterisationPV(void) //Fonction de la carctérisation
 
   digitalWrite(Pinrelay, HIGH); // signal relais active, disconnection PV
 
-  //**************************************************  Mesure Icc **************************
+  /**************************************************  Mesure Icc **************************/
 
   ledcWrite(pwmChannel, alphaIcc);
   delay(100);
