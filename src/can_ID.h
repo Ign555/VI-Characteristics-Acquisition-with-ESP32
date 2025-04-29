@@ -1,0 +1,10 @@
+#define GET_VIB_BOARD_NUMBER 0
+#define GET_VIB_TEMP 1
+#define GET_VIB_PV 2
+#define GET_MB_DATA 3
+
+#define GET_VIB_BOARD_NUMBER_ACK 10
+#define GET_VIB_TEMP_ACK 11
+#define GET_VIB_PV_ACK 12
+#define GET_MB_DATA_ACK 13
+
