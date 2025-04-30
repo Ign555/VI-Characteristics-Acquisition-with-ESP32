@@ -1,0 +1,7 @@
+TO do : 
+
+Ajouter la fonction pour mesurer les points caractéristique.
+Régler le problème d'offset
+Commenter les lignes que je n'ai pas su décrire
+implémenter le CAN
+Produire une documentation
