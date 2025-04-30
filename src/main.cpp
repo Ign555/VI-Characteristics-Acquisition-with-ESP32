@@ -1,3 +1,5 @@
+//#define DEBUG //Décommenter pour activer le mode debug
+
 #include <Arduino.h>
 
 #include "Panneau.hpp"
@@ -41,15 +43,17 @@ int BP4 = 14;
 void FloatToBytes(float buffercase, int &quotient, int &reste);
 void sendValues(float *buffer, int start, int end, uint8_t CAN_ID);
 */
-void caracterisationPV(void);
 
 //uint8_t getDIPSwitchInfo(void);
-Panneau panneau();
+Panneau panneau;
 
 void setup()
 {
   Serial.begin(115200);
   Serial.println("CARTE VI Mesure Lineaire\n");
+
+
+
 }
 
 void loop()
@@ -83,7 +87,7 @@ void reception(char ch)
 
     if (commande == "M")
     {
-      caracterisationPV();
+      panneau.caracterisation_VI(15, 12);
     }
 
     chaine = "";
@@ -102,142 +106,3 @@ void serialEvent()
   }
 }
 
-/************************************Initialisation de la Fonction de caractérisation************************************/
-void caracterisationPV(void) //Fonction de la carctérisation
-{
-
-  int i; // boucle for
-
-  float alphaIcc = 1024; // transistor close
-  float alphaVoc = 0;    // transsitor open
-  float deltaI, deltaV;
-
-  digitalWrite(Pinrelay, HIGH); // signal relais active, disconnection PV
-
-  /**************************************************  Mesure Icc **************************/
-
-  ledcWrite(pwmChannel, alphaIcc);
-  delay(100);
-  Vcourant_ampli = 0;
-  for (i = 0; i < 1000; i++)
-    Vcourant_ampli = (float)analogReadMilliVolts(33) + Vcourant_ampli; // mesure de la tension Ushunt amplifiรฉe
-
-  Vcourant_ampli = Vcourant_ampli / 1000;
-  Icc = (Vcourant_ampli / 319.48); // mise à l'échelle
-
-  //**************************************************  Mesure Voc **************************
-
-  ledcWrite(pwmChannel, alphaVoc);
-  delay(100);
-  Vmesure = 0;
-  for (i = 0; i < 1000; i++)
-  {
-    Vmesure = (float)analogReadMilliVolts(32) + Vmesure; // mesure de la tension Ushunt amplifiรฉe
-  }
-  Vmesure = Vmesure / 1000; // mesure de la tension de sortie du pont diviseur
-  Voc = (Vmesure / 91.56);  // mesure de la tension + calibration
-
-  Serial.print("Icc: ");
-  Serial.println(Icc);
-
-  Serial.print("Voc: ");
-  Serial.println(Voc);
-
-  Iinf = Voc / R0; // calcul de la valeur minimal du courant
-
-  // For the V constance zone
-  for (numPt = 1; numPt <= nbPtI; numPt++)
-  {
-
-    // CoefLog[numPt] = 1 + ((float(numPt - 1) * 9) / (nbPtI - 1));
-    deltaI = (Icc - Iinf) / (nbPtI - 1);
-    // Serial.printf("CoefLog[%d]=%f\n",numPt,CoefLog [numPt]);
-
-//*******************************************Mesure résistances*************************************************************** 
-    I[numPt] = Iinf + (numPt - 1) * deltaI;
-    V[numPt] = Voc;
-    Req[numPt] = Voc / I[numPt];
-    if (Req[numPt] > 22)
-      Req[numPt] = 22;
-
-    dty[numPt] = 1 - Req[numPt] / 22;
-  
-       /*Affichage pour debug
-        Serial.print("numPt : ");
-        Serial.print(numPt);
-        Serial.print(" V : ");
-        Serial.print(V[numPt]);
-        Serial.print(" I : ");
-        Serial.print(I[numPt]);
-
-        Serial.print(" R : ");
-        Serial.println(Req[numPt]);
-        */
-    
-  }
-
-  // For I constance zone
-  for (numPt = nbPtI + 1; numPt <= (nbPtV + nbPtI) - 1; numPt++)
-  {
-
-    // Coef[numPt] = 1 + (float(numPt - 1) * 9 / (nbPtV - 1));
-    deltaV = Voc / (nbPtV - 1);
-    I[numPt] = Icc;
-    V[numPt] = Voc - (numPt - nbPtI) * deltaV;
-    Req[numPt] = V[numPt] / Icc;
-     if (Req[numPt] > 22)
-      Req[numPt] = 22;
-
-    dty[numPt] = 1 - Req[numPt] / 22;
-   
-
-    /*Affichage pour debug
-        Serial.print("numPt : ");
-        Serial.print(numPt);
-
-        Serial.print(" V : ");
-        Serial.print(V[numPt]);
-
-        Serial.print(" I : ");
-        Serial.print(I[numPt]);
-
-        Serial.print(" R : ");
-        Serial.println(Req[numPt]);
-        */ 
-      
-  }
-
-  /***************************************** Mesure des points de la caracteristique  *************************************/
-
-  for (numPt = 1; numPt <= nbPtI + nbPtV - 1; numPt++)
-  {
-
-    ledcWrite(pwmChannel, (int)(dty[numPt]*1023));
-    delay(100);
-
-    Vmesure = 0;
-    Vcourant_ampli = 0;
-    conv = 1;
-    int ii;
-    for (ii = 0; ii < 1000; ii++)
-    { // acquisition 100
-
-      Vmesure = (float)analogReadMilliVolts(32) / 1000 + Vmesure;
-      Vcourant_ampli = (float)analogReadMilliVolts(33) / 1000 + Vcourant_ampli;
-    }
-  
-    tab_curr[numPt] = (Vcourant_ampli / 319.48); // mesure du courant moyen + calibration
-    tab_volt[numPt] = (Vmesure / 91.56);         // mesure de la tension moyenne + calibration
-   if (tab_volt[numPt]<=1.555)
-   {
-     tab_volt[numPt]=0;
-   }
-    conv = 0;
-
-    Serial.printf("VI %d %3.3f %3.3f  \r\n", numPt, tab_volt[numPt], tab_curr[numPt]);
-    
-  }
-
-
-  digitalWrite(Pinrelay, LOW);
-}
