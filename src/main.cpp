@@ -8,13 +8,13 @@
 *
 *
 ****************************************************************/
-
-//#define DEBUG //Décommenter pour activer le mode debug
-
+#define __DEBUG__
 #include <Arduino.h>
 
 #include "Panneau.hpp"
 
+//#define DEBUG //Décommenter pour activer le mode debug
+//#define MAIN_MODE //Décommenter pour 'commander' le bus CAN avec la carte
 
 int nbPtI = 12; // number of points lower part
 int nbPtV = 15; // number of points upper part

@@ -1,7 +1,7 @@
 /****************************************************************
 *
 *
-* Bibliothèque panneau solaire pour D2E Laos 
+* Bibliothèque panneau solaire pour les cartes VI du D2E Laos 
 * Created by Rayan Grand
 * Version : v1.0
 * File Creation : 29/04/2025
@@ -33,13 +33,17 @@
 #define __RESOLUTION_PWM__ 10 //10 bits de résolution => 1024 valeurs possibles pour le rapport cyclique
 
 //Valeur rapport cyclique PWM 
-#define __DUTY_ICC__ 1024 //Rapport cyclique maximum => mise en court-circuit du panneau
+#define __DUTY_ICC__ 1023 //Rapport cyclique maximum => mise en court-circuit du panneau
 #define __DUTY_VOC__ 0 //Rapport cyclique minimum =>  imposer une charge de 22 Ohm
 
+//Constante lié à la mesure 
+#define __N_MESURE__ 1000
 
 //Constantes matérielle 
 #define __VALEUR_R0__ 22 //Résistance de chage (R0) de 22 Ohm
-
+#define __FACTEUR_ECHELLE_TENSION__ 91.56 //Facteur de mise à l'échelle pour obtenir Voc
+#define __FACTEUR_ECHELLE_COURANT__ 319.48 //Facteur de mise à l'échelle pour obtenir ICC
+#define __SEUIL_ANALOGREADMILLIVOLT_ESP32__ 142 // Valeur minimum donnée par la fonction analogReadMillivolt ( voir vidéo Discours )
 /****************************************************************
 *
 * Classe panneau solaire
@@ -68,7 +72,7 @@ class Panneau{
         void _mesure_Voc();
 
         void _zone_V_constante(int nbr_ptI);
-        void _zone_I_constant(int nbr_ptV);
+        void _zone_I_constant(int nbr_ptI, int nbr_ptV);
 
         void _mesure_point_caracteristique(int nbr_ptI, int nbr_ptV);
 
