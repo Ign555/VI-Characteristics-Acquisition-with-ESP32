@@ -44,6 +44,7 @@
 #define __FACTEUR_ECHELLE_TENSION__ 91.56 //Facteur de mise à l'échelle pour obtenir Voc
 #define __FACTEUR_ECHELLE_COURANT__ 319.48 //Facteur de mise à l'échelle pour obtenir ICC
 #define __SEUIL_ANALOGREADMILLIVOLT_ESP32__ 142 // Valeur minimum donnée par la fonction analogReadMillivolt ( voir vidéo Discours )
+
 /****************************************************************
 *
 * Classe panneau solaire
@@ -53,10 +54,11 @@
 class Panneau{
 
     public: 
+
         Panneau();
         ~Panneau();
+        float lecture_temperature();
         void caracterisation_VI(int nbr_ptI, int nbrPtI);
-        void lecture_temperature();
 
     private:
 

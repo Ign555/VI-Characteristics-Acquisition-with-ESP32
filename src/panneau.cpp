@@ -8,7 +8,9 @@
 *
 *
 ****************************************************************/
-///#define __DEBUG__ //Décommenter pour débugger
+
+//#define __DEBUG__ //Décommenter pour débugger
+
 #include "panneau.hpp"
 
 /****************************************************************
@@ -59,12 +61,6 @@ void Panneau::caracterisation_VI(int nbr_ptV, int nbr_ptI){
     this->_mesure_point_caracteristique(nbr_ptI, nbr_ptV);
 
     digitalWrite(__PIN_RELAI__, LOW); // Mise des pins commandes des relais à l'état haut, déconnexion PV
-
-}
-
-void Panneau::lecture_temperature(){
-
-
 
 }
 
@@ -132,7 +128,7 @@ void Panneau::_zone_V_constante(int nbr_ptI){
     //Calcul de la valeur minimal du courant
     Imin = this->Voc / __VALEUR_R0__;
 
-    //Stockage / Calcul des différents points caractéristique dans la zone où la tension est constante ( V, I, Req, dty )
+    //Stockage / Calcul des différentes caractéristique dans la zone où la tension est constante ( V, I, Req, dty )
     for(this->_num_pt = 1; this->_num_pt <= nbr_ptI; this->_num_pt++){
 
         //à commenter
@@ -196,13 +192,14 @@ void Panneau::_zone_I_constant(int nbr_ptI, int nbr_ptV){
 }
 
 void Panneau::_mesure_point_caracteristique(int nbr_ptI, int nbr_ptV){
-    //à mettree au propre
+
     float tab_volt[60];
     float tab_curr[60];
 
     float Vmesure = 0, Vcourant_ampli = 0;
     float Vcourant_ampli_adc = 0, Vmesure_adc = 0; //Variables pour stocker temporairement les mesures de tensions
 
+    //Mesure des points de la caractéristique pour chaque résistances trouvées
     for (this->_num_pt = 1; this->_num_pt < nbr_ptI + nbr_ptV; this->_num_pt++)
     {
 
@@ -220,12 +217,12 @@ void Panneau::_mesure_point_caracteristique(int nbr_ptI, int nbr_ptV){
 
             //On vérifie que la mesure ne corresponde pas au seuil minimum de la fonction analogReadMilliVolts
             if(Vmesure_adc > __SEUIL_ANALOGREADMILLIVOLT_ESP32__){
-                Vmesure += Vmesure_adc/__N_MESURE__;
+                Vmesure += Vmesure_adc/__N_MESURE__; //Pondération pour que la somme fasse une moyenne
             }
 
             //On vérifie que la mesure ne corresponde pas au seuil minimum de la fonction analogReadMilliVolts
             if(Vcourant_ampli_adc > __SEUIL_ANALOGREADMILLIVOLT_ESP32__){
-                Vcourant_ampli += Vcourant_ampli_adc/__N_MESURE__;
+                Vcourant_ampli += Vcourant_ampli_adc/__N_MESURE__; //Pondération pour que la somme fasse une moyenne
             }
         }
   
