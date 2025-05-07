@@ -20,30 +20,32 @@
 
 #define __ADDRESSE_CAPTEUR_TC74__ 0x48 //Addresse du TC74
 #define __N_BP__ 5 //Nombre d'interrupteur connecté ( DIP SWITCH )
-#define __COEFF_DELAI_CAN__ 100 //Delai que prend une carte pour répondre = __COEFF_DELAI_CAN__ * numero_de_carte
+#define __COEFF_TEMPS_REPONSE__ 100 //Delai que prend une carte pour répondre = __COEFF_DELAI_CAN__ * numero_de_carte
 
 //#define MAIN_MODE //Décommenter pour 'commander' le bus CAN avec la carte
 
 int nbPtI = 12; // number of points lower part
 int nbPtV = 15; // number of points upper part
 
+//Prototype de fonction communication série
 void onReceive(int packetSize);
-/*
-void FloatToBytes(float buffercase, int &quotient, int &reste);
-void sendValues(float *buffer, int start, int end, uint8_t CAN_ID);
-*/
-//Broche du DIP Switch
-uint8_t pin_BP[5] = {25, 26, 27, 14, 13};
 
-//Prototype de fonction
+//Prototype de fonction CAN
 void initCAN(); //Fonction d'initialisation du CAN
 void reception(char ch); //Fonction de callback exécuté lors d'une réception via le port série
+void manageCAN();
+
+//Prototype de fonction de réponse CAN
+void envoyer_ping();
 
 //Déclaration des flags
-bool canAvailable;
+bool canAvailable = false;
 
 //Variables globales
 uint8_t num_carte = 0;
+
+//Broche du DIP Switch
+uint8_t pin_BP[5] = {25, 26, 27, 14, 13};
 
 //Déclaration des périphériques
 CANMessage rxMsg;
@@ -66,9 +68,9 @@ void setup()
   }
   
   //Lecture des broches liées au DIP switch ( détermination du numéro de la carte )
-  for(int i = 0 ; i < __N_BP__ ; i++)
+  for(int i = 1 ; i < __N_BP__ ; i++)
   {
-    if(digitalRead(pin_BP[i]) == HIGH){
+    if(digitalRead(pin_BP[i-1]) == LOW){
       num_carte = i;
       break;
     }
@@ -84,7 +86,10 @@ void setup()
 
 void loop()
 {
-
+  if (canAvailable == true)
+  {
+    manageCAN();
+  }
 }
 
 /****************************************************************
@@ -190,6 +195,43 @@ void manageCAN()
     printf("Len = %d\n", rxMsg.len);
   #endif
 
+  switch(rxMsg.id){
+    
+    case 0: //En cas d'ID 0 ( la carte CAN vérifie les cartes présentes ) 
+      envoyer_ping();
+    break;
+    default:
+      //On imprime les informations du message
+      Serial.print("Message inconnu Data(s) : ");
+      for (int i = 0; i < rxMsg.len; i++)
+      {
+        Serial.print(rxMsg.data[i]);
+        Serial.print(" ");
+        Serial.println();
+      }
+    break;
+  }  
+
   canAvailable = false;
+
+}
+
+/****************************************************************
+*
+* Fonction "réponse" CAN
+*
+****************************************************************/
+
+//Envoie d'une réponse à la carte CAN pour confirmer la présence de la carte
+void envoyer_ping(){
+
+  delay(__COEFF_TEMPS_REPONSE__*num_carte);
+
+  //Envoie des paquets à l'id 10
+  Serial.print("Demande d'identification, envoie de la réponse...");
+  CAN.beginPacket(0xA);
+  CAN.endPacket();
+
+  delay(1000);
 
 }
