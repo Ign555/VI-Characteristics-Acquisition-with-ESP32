@@ -68,7 +68,10 @@ void setup()
   //Lecture des broches liées au DIP switch ( détermination du numéro de la carte )
   for(int i = 0 ; i < __N_BP__ ; i++)
   {
-    num_carte |= digitalRead(pin_BP[i]) << i;
+    if(digitalRead(pin_BP[i]) == HIGH){
+      num_carte = i;
+      break;
+    }
   }
   
   //Initialisation bus CAN
