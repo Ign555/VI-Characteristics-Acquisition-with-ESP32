@@ -19,13 +19,8 @@
 #include "tc74.h"
 
 #define __ADDRESSE_CAPTEUR_TC74__ 0x48 //Addresse du TC74
-
-//Broche du DIP Switch
-#define BP1 25
-#define BP2 6
-#define BP3 27
-#define BP4 14
-#define BP5 15
+#define __N_BP__ 5 //Nombre d'interrupteur connecté ( DIP SWITCH )
+#define __COEFF_DELAI_CAN__ 100 //Delai que prend une carte pour répondre = __COEFF_DELAI_CAN__ * numero_de_carte
 
 //#define MAIN_MODE //Décommenter pour 'commander' le bus CAN avec la carte
 
@@ -37,15 +32,18 @@ void onReceive(int packetSize);
 void FloatToBytes(float buffercase, int &quotient, int &reste);
 void sendValues(float *buffer, int start, int end, uint8_t CAN_ID);
 */
-
-//uint8_t getDIPSwitchInfo(void);
+//Broche du DIP Switch
+uint8_t pin_BP[5] = {25, 26, 27, 14, 13};
 
 //Prototype de fonction
+void initCAN(); //Fonction d'initialisation du CAN
 void reception(char ch); //Fonction de callback exécuté lors d'une réception via le port série
 
 //Déclaration des flags
 bool canAvailable;
 
+//Variables globales
+uint8_t num_carte = 0;
 
 //Déclaration des périphériques
 CANMessage rxMsg;
@@ -54,16 +52,30 @@ Panneau panneau;
 void setup()
 {
 
-  //Définition entrée/sortie DIP switch
-
-  
-  //Initialisation bus CAN
-  lireTemperature(__ADDRESSE_CAPTEUR_TC74__);
-
   //Initialisation du port série
-
   Serial.begin(115200);
   Serial.println("CARTE VI Mesure Lineaire");
+
+  //Initalisation de l'I2C pour le TC74
+  Wire.begin();
+
+  //Mise en entrée des broches liées au DIP switch
+  for(int i = 0 ; i < __N_BP__ ; i++)
+  {
+    pinMode(pin_BP[i], INPUT);
+  }
+  
+  //Lecture des broches liées au DIP switch ( détermination du numéro de la carte )
+  for(int i = 0 ; i < __N_BP__ ; i++)
+  {
+    num_carte |= digitalRead(pin_BP[i]) << i;
+  }
+  
+  //Initialisation bus CAN
+  initCAN();
+
+  //Impression de l'ID de la carte
+  Serial.printf("Carte n°%d\n", num_carte);
 
 }
 
@@ -115,6 +127,11 @@ void reception(char ch)
       panneau.caracterisation_VI(nbPtV, nbPtI);
     }
 
+    if (commande == "T")
+    {
+      Serial.printf("%f\n", lireTemperature(__ADDRESSE_CAPTEUR_TC74__));
+    }
+
     chaine = "";
   }
   else
@@ -139,8 +156,6 @@ void initCAN(){
       Serial.println("Echec inialisation du CAN!");
       while (1);
   }
-
-  //On calcul le délai d'attente avant le message CAN 
 
   //Définition de la fonction de réception ( callback )
   CAN.onReceive(onReceive);
