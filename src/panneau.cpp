@@ -68,7 +68,7 @@ void Panneau::caracterisation_VI(int nbr_ptV, int nbr_ptI){
 
 /******************************Fonctions "getter" ( public )******************************/
 
-int Panneau::get_nombre_de_mesures(){
+uint8_t Panneau::get_nombre_de_mesures(){
 
     return this->_nbr_mesure;
 

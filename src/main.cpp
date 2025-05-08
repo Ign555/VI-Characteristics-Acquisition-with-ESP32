@@ -30,15 +30,16 @@ int nbPtV = 15; // number of points upper part
 
 //Prototype de fonction communication série
 void onReceive(int packetSize);
+void reception(char ch); //Fonction de callback exécuté lors d'une réception via le port série
 
 //Prototype de fonction CAN
 void initCAN(); //Fonction d'initialisation du CAN
-void reception(char ch); //Fonction de callback exécuté lors d'une réception via le port série
 void manageCAN();
 
 //Prototype de fonction de réponse CAN
 void envoyer_ping();
 void envoyer_temperature();
+void envoyer_caracteristique();
 
 //Déclaration des flags
 bool canAvailable = false;
@@ -304,8 +305,10 @@ void envoyer_caracteristique(){
 
   CAN.beginPacket(0xC);
  
+  CAN.write(panneau.get_nombre_de_mesures());
+
   //Pour chaque mesure effectuée
-  for(int i = 0; i < panneau.get_nombre_de_mesures(); i++){
+  for(uint8_t i = 0; i < panneau.get_nombre_de_mesures(); i++){
 
     //Récupération des mesures
     V_measure_buffer = panneau.get_mesure_V(i);

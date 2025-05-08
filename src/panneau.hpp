@@ -60,7 +60,7 @@ class Panneau{
         void caracterisation_VI(int nbr_ptI, int nbrPtI);
 
         //Getter
-        int get_nombre_de_mesures(); //Fonction qui renvoie le nombre de mesure effectuée lors de la dernière caractérisation
+        uint8_t get_nombre_de_mesures(); //Fonction qui renvoie le nombre de mesure effectuée lors de la dernière caractérisation
 
         float get_mesure_V(uint8_t index);
         float get_mesure_I(uint8_t index);
@@ -74,7 +74,7 @@ class Panneau{
         float VI_I[60], VI_V[60]; //Tableaux stockant les points caractéristiques
         float Req[60], dty[60]; //Tableau stockant les résistances équivatentes / Tableau stockant les rapports cyliques associés 
 
-        int _nbr_mesure; //Nombre de mesure effectuée lors de la dernière caractérisation
+        uint8_t _nbr_mesure; //Nombre de mesure effectuée lors de la dernière caractérisation
         int _num_pt;
 
         void _mesuse_Icc();
