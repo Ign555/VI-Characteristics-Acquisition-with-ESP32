@@ -57,17 +57,24 @@ class Panneau{
 
         Panneau();
         ~Panneau();
-        float lecture_temperature();
         void caracterisation_VI(int nbr_ptI, int nbrPtI);
+
+        //Getter
+        int get_nombre_de_mesures(); //Fonction qui renvoie le nombre de mesure effectuée lors de la dernière caractérisation
+
+        float get_mesure_V(uint8_t index);
+        float get_mesure_I(uint8_t index);
 
     private:
 
         float Icc, Voc; // _S_Vcourant_ampli => Somme des tensions relevées en sortie de l'Ampli ( panneau en court-circuit ), 
                                     // Icc => Courant moyen relevée ( panneau en court-circuit )
 
-        float I[60], V[60]; //Tableaux stockant les points caractéristiques
+        float I[60], V[60]; 
+        float VI_I[60], VI_V[60]; //Tableaux stockant les points caractéristiques
         float Req[60], dty[60]; //Tableau stockant les résistances équivatentes / Tableau stockant les rapports cyliques associés 
 
+        int _nbr_mesure; //Nombre de mesure effectuée lors de la dernière caractérisation
         int _num_pt;
 
         void _mesuse_Icc();
@@ -76,7 +83,7 @@ class Panneau{
         void _zone_V_constante(int nbr_ptI);
         void _zone_I_constant(int nbr_ptI, int nbr_ptV);
 
-        void _mesure_point_caracteristique(int nbr_ptI, int nbr_ptV);
+        void _mesure_point_caracteristique();
 
 };
 

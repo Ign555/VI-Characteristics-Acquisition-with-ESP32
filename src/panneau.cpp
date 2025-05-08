@@ -44,6 +44,8 @@ Panneau::~Panneau(void){
 
 void Panneau::caracterisation_VI(int nbr_ptV, int nbr_ptI){
 
+    this->_nbr_mesure = nbr_ptI + nbr_ptV;
+
     digitalWrite(__PIN_RELAI__, HIGH); // Mise des pins commandes des relais à l'état haut, déconnexion PV
     
     this->_mesuse_Icc();
@@ -58,9 +60,29 @@ void Panneau::caracterisation_VI(int nbr_ptV, int nbr_ptI){
     this->_zone_I_constant(nbr_ptI, nbr_ptV);
 
     //Mesure des points de la caractéristique V(I)
-    this->_mesure_point_caracteristique(nbr_ptI, nbr_ptV);
+    this->_mesure_point_caracteristique();
 
     digitalWrite(__PIN_RELAI__, LOW); // Mise des pins commandes des relais à l'état haut, déconnexion PV
+
+}
+
+/******************************Fonctions "getter" ( public )******************************/
+
+int Panneau::get_nombre_de_mesures(){
+
+    return this->_nbr_mesure;
+
+}
+
+float Panneau::get_mesure_V(uint8_t index){
+
+    return this->VI_V[index];
+
+}
+
+float Panneau::get_mesure_I(uint8_t index){
+
+    return this->VI_I[index];
 
 }
 
@@ -191,16 +213,13 @@ void Panneau::_zone_I_constant(int nbr_ptI, int nbr_ptV){
 
 }
 
-void Panneau::_mesure_point_caracteristique(int nbr_ptI, int nbr_ptV){
-
-    float tab_volt[60];
-    float tab_curr[60];
+void Panneau::_mesure_point_caracteristique(){
 
     float Vmesure = 0, Vcourant_ampli = 0;
     float Vcourant_ampli_adc = 0, Vmesure_adc = 0; //Variables pour stocker temporairement les mesures de tensions
 
     //Mesure des points de la caractéristique pour chaque résistances trouvées
-    for (this->_num_pt = 1; this->_num_pt < nbr_ptI + nbr_ptV; this->_num_pt++)
+    for (this->_num_pt = 1; this->_num_pt < this->_nbr_mesure; this->_num_pt++)
     {
 
         ledcWrite(__CANAL_PWM__, (int)(dty[this->_num_pt]*__DUTY_ICC__)); // Connexion du panneau à la résistance + hachage de cette dernière pour moduler le courant
@@ -226,11 +245,12 @@ void Panneau::_mesure_point_caracteristique(int nbr_ptI, int nbr_ptV){
             }
         }
   
-        tab_curr[this->_num_pt] = (Vcourant_ampli / __FACTEUR_ECHELLE_COURANT__);  //Calibration du courant
-        tab_volt[this->_num_pt] = (Vmesure / __FACTEUR_ECHELLE_TENSION__);         //Calibration de la tension
+        this->VI_I[this->_num_pt] = (Vcourant_ampli / __FACTEUR_ECHELLE_COURANT__);  //Calibration du courant
+        
+        this->VI_V[this->_num_pt] = (Vmesure / __FACTEUR_ECHELLE_TENSION__);         //Calibration de la tension
         
         //Affichage des mesures effectuées
-        Serial.printf("VI %d %3.3f %3.3f  \r\n", this->_num_pt, tab_volt[this->_num_pt], tab_curr[this->_num_pt]);
+        Serial.printf("VI %d %3.3f %3.3f  \r\n", this->_num_pt, this->VI_V[this->_num_pt], this->VI_I[this->_num_pt]);
     
     }
 

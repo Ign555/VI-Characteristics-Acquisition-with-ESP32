@@ -17,6 +17,7 @@
 #include "Panneau.hpp"
 #include "canMessage.h"
 #include "tc74.h"
+#include "utils.h"
 
 #define __ADDRESSE_CAPTEUR_TC74__ 0x48 //Addresse du TC74
 #define __N_BP__ 5 //Nombre d'interrupteur connecté ( DIP SWITCH )
@@ -37,6 +38,7 @@ void manageCAN();
 
 //Prototype de fonction de réponse CAN
 void envoyer_ping();
+void envoyer_temperature();
 
 //Déclaration des flags
 bool canAvailable = false;
@@ -200,6 +202,15 @@ void manageCAN()
     case 0: //En cas d'ID 0 ( la carte CAN vérifie les cartes présentes ) 
       envoyer_ping();
     break;
+    
+    case 1:
+      envoyer_temperature();
+    break;
+
+    case 2:
+    envoyer_caracteristique();
+    break;
+
     default:
       //On imprime les informations du message
       Serial.print("Message inconnu Data(s) : ");
@@ -229,7 +240,92 @@ void envoyer_ping(){
 
   //Envoie des paquets à l'id 10
   Serial.print("Demande d'identification, envoie de la réponse...");
+
   CAN.beginPacket(0xA);
+  CAN.endPacket();
+
+  delay(1000);
+
+}
+
+//Envoie de la température à la carte CAN
+void envoyer_temperature(){
+
+  float temp;
+  uint8_t signe_temp, buffer[sizeof(float)]; //buffer est le tableau qui stockera les octets de la température
+
+  //Préparation des informations à envoyer
+  temp = lireTemperature(__ADDRESSE_CAPTEUR_TC74__); 
+  
+  //On détermine la valeur à mettre dans l'octet désignant le signe de la température
+  if(temp < 0){
+    signe_temp = 0;
+  }else{
+    signe_temp = 1;
+  }
+
+  float_to_bytes(&temp, buffer); //Convertion du float en un tableau d'octet
+
+  delay(__COEFF_TEMPS_REPONSE__*num_carte);
+
+  //Envoie des paquets à l'id 11 ( température )
+  Serial.print("Envoie de la température...");
+
+  CAN.beginPacket(0xB);
+
+  //Mise des informations dans le paquets
+  for(int i = 0; i < sizeof(float) + 1; i++){
+    if(i == 0){
+      CAN.write(signe_temp);
+    }else{
+      CAN.write(buffer[i-1]);
+    }    
+  }
+
+  CAN.endPacket();
+
+  delay(1000);
+
+}
+
+//Envoie de la caractéristique VI à la cartes CAN
+void envoyer_caracteristique(){
+ 
+  float I_measure_buffer, V_measure_buffer;
+  uint8_t I_buffer[sizeof(float)], V_buffer[sizeof(float)]; //Ces variables stockerons les temporaitements les octets des associés aux valeurs des points de mesure
+
+  //Preparation des informations à envoyer
+  panneau.caracterisation_VI(nbPtV, nbPtI);
+
+  delay(__COEFF_TEMPS_REPONSE__*num_carte);
+
+  //Envoie des paquets à l'id 12 ( mesure )
+  Serial.print("Envoie de la caractéristique VI...");
+
+  CAN.beginPacket(0xC);
+ 
+  //Pour chaque mesure effectuée
+  for(int i = 0; i < panneau.get_nombre_de_mesures(); i++){
+
+    //Récupération des mesures
+    V_measure_buffer = panneau.get_mesure_V(i);
+    I_measure_buffer = panneau.get_mesure_I(i);
+
+    //Convertion des mesures
+    float_to_bytes(&V_measure_buffer, V_buffer);
+    float_to_bytes(&I_measure_buffer, I_buffer);
+
+    //On insère les octets de la valeur de la tension
+    for(int j = 0; j < sizeof(float); j++){
+      CAN.write(V_buffer[j]);
+    }
+    //On insère les octets de la valeur du courant
+    for(int j = 0; j < sizeof(float); j++){
+      CAN.write(I_buffer[j]);
+    }
+
+}
+
   CAN.endPacket();
 
   delay(1000);
