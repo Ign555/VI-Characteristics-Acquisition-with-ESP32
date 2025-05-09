@@ -4,6 +4,6 @@
 #define __TC_74_H__
 
 
-float lireTemperature(int addr);
+int8_t lireTemperature(int addr);
 
 #endif

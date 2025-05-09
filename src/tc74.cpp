@@ -1,10 +1,9 @@
 #include "tc74.h"
 
-float lireTemperature(int addr){
+int8_t lireTemperature(int addr){
 
     //Variables
     int temp;
-    float temperature;
 
     //Demande de lecture de la température
     Wire.beginTransmission(addr);
@@ -17,8 +16,7 @@ float lireTemperature(int addr){
 
     if (Wire.available()) {
         temp = Wire.read();
-        temperature = (float)temp;
-        return temperature;
+        return temp;
     }
 
     return -1;

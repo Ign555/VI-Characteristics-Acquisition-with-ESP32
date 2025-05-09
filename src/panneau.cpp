@@ -218,6 +218,12 @@ void Panneau::_mesure_point_caracteristique(){
     float Vmesure = 0, Vcourant_ampli = 0;
     float Vcourant_ampli_adc = 0, Vmesure_adc = 0; //Variables pour stocker temporairement les mesures de tensions
 
+    
+    this->VI_I[0] = this->Voc; //Enregistrement de Voc dans le tableau à l'index 0
+        
+    this->VI_V[0] = this->Icc; //Enregistrement de Vcc dans le tableau à l'index 0
+
+
     //Mesure des points de la caractéristique pour chaque résistances trouvées
     for (this->_num_pt = 1; this->_num_pt < this->_nbr_mesure; this->_num_pt++)
     {
@@ -225,7 +231,7 @@ void Panneau::_mesure_point_caracteristique(){
         ledcWrite(__CANAL_PWM__, (int)(dty[this->_num_pt]*__DUTY_ICC__)); // Connexion du panneau à la résistance + hachage de cette dernière pour moduler le courant
 
         delay(100); // Attente du 100 ms ( pour donner le temps au transistor ?? )
-
+        
         Vmesure = 0;
         Vcourant_ampli = 0;
 

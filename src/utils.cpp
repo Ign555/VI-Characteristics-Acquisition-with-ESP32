@@ -19,7 +19,8 @@
 
 void bytes_to_float(uint8_t *bytes, float *a){
 
-    
+    memcpy(a, bytes, sizeof(float));
+
 }
 
 void float_to_bytes(float *a, uint8_t *bytes){
