@@ -265,10 +265,8 @@ void envoyer_temperature(){
   CAN.beginPacket(0xB);
 
   //Mise de la valeur de la température dans le paquet
-  for(int i = 0; i < sizeof(float); i++){
-      CAN.write(temp);
-  }
-
+  CAN.write(temp);
+  
   CAN.endPacket();
 
   delay(1000);
@@ -292,10 +290,6 @@ void envoyer_caracteristique(){
   //Pour chaque mesure effectuée
   for(uint8_t i = 0; i < panneau.get_nombre_de_mesures(); i++){
 
-    CAN.beginPacket(0xC);
- 
-    CAN.write(panneau.get_nombre_de_mesures());
-
     //Récupération des mesures
     V_measure_buffer = panneau.get_mesure_V(i);
     I_measure_buffer = panneau.get_mesure_I(i);
@@ -304,22 +298,31 @@ void envoyer_caracteristique(){
     float_to_bytes(&V_measure_buffer, V_buffer);
     float_to_bytes(&I_measure_buffer, I_buffer);
 
+    CAN.beginPacket(0xC);
+    CAN.write(panneau.get_nombre_de_mesures());
     CAN.write(i);
 
     //On insère les octets de la valeur de la tension
     for(int j = 0; j < sizeof(float); j++){
       CAN.write(V_buffer[j]);
     }
+
+    CAN.endPacket();
+
+    CAN.beginPacket(0xD);
+    CAN.write(panneau.get_nombre_de_mesures());
+    CAN.write(i);
+
     //On insère les octets de la valeur du courant
     for(int j = 0; j < sizeof(float); j++){
       CAN.write(I_buffer[j]);
     }
 
     CAN.endPacket();
+    
+    delay(10);
 
 }
-
- 
 
   delay(1000);
 

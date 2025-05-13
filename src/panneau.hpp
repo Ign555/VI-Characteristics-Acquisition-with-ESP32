@@ -45,6 +45,9 @@
 #define __FACTEUR_ECHELLE_COURANT__ 319.48 //Facteur de mise à l'échelle pour obtenir ICC
 #define __SEUIL_ANALOGREADMILLIVOLT_ESP32__ 142 // Valeur minimum donnée par la fonction analogReadMillivolt ( voir vidéo Discours )
 
+//Délai e
+#define __DELAI_TRANSISTOR__ 1
+
 /****************************************************************
 *
 * Classe panneau solaire

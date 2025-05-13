@@ -52,8 +52,10 @@ void Panneau::caracterisation_VI(int nbr_ptV, int nbr_ptI){
     this->_mesure_Voc();
 
     //Impression de Voc et Icc
-    Serial.printf("Icc: %f \n", this->Icc);
-    Serial.printf("Voc: %f \n", this->Voc);
+    #ifdef __DEBUG__
+        Serial.printf("Icc: %f \n", this->Icc);
+        Serial.printf("Voc: %f \n", this->Voc);
+    #endif
 
     //Calcul des résistances équivalentes pour chaque point de la courbe
     this->_zone_V_constante(nbr_ptI);
@@ -95,7 +97,7 @@ void Panneau::_mesuse_Icc(){
 
     ledcWrite(__CANAL_PWM__, __DUTY_ICC__); // Mise en court-circuit du PV
     
-    delay(100); // Attente du 100 ms ( pour donner le temps au transistor ?? )
+    delay(__DELAI_TRANSISTOR__); // Attente du 100 ms ( pour donner le temps au transistor ?? )
 
     //Somme des mesures de la tension Ushunt amplifiée
     for (int i = 0; i < __N_MESURE__; i++){
@@ -122,7 +124,7 @@ void Panneau::_mesure_Voc(){
 
     ledcWrite(__CANAL_PWM__, __DUTY_VOC__); // Connexion de R0 = 22 Ohn entre les bornes du panneau
 
-    delay(100); // Attente du 100 ms ( pour donner le temps au transistor ?? )
+    delay(__DELAI_TRANSISTOR__); // Attente du 100 ms ( pour donner le temps au transistor ?? )
     
     //Somme des mesures de la tension à la sortie du pont diviseur
     for (int i = 0; i < __N_MESURE__; i++)
@@ -219,9 +221,9 @@ void Panneau::_mesure_point_caracteristique(){
     float Vcourant_ampli_adc = 0, Vmesure_adc = 0; //Variables pour stocker temporairement les mesures de tensions
 
     
-    this->VI_I[0] = this->Voc; //Enregistrement de Voc dans le tableau à l'index 0
+    this->VI_I[0] = this->Icc; //Enregistrement de Voc dans le tableau à l'index 0
         
-    this->VI_V[0] = this->Icc; //Enregistrement de Vcc dans le tableau à l'index 0
+    this->VI_V[0] = this->Voc; //Enregistrement de Vcc dans le tableau à l'index 0
 
 
     //Mesure des points de la caractéristique pour chaque résistances trouvées
@@ -230,7 +232,7 @@ void Panneau::_mesure_point_caracteristique(){
 
         ledcWrite(__CANAL_PWM__, (int)(dty[this->_num_pt]*__DUTY_ICC__)); // Connexion du panneau à la résistance + hachage de cette dernière pour moduler le courant
 
-        delay(100); // Attente du 100 ms ( pour donner le temps au transistor ?? )
+        delay(__DELAI_TRANSISTOR__); // Attente du 100 ms ( pour donner le temps au transistor ?? )
         
         Vmesure = 0;
         Vcourant_ampli = 0;
@@ -256,8 +258,9 @@ void Panneau::_mesure_point_caracteristique(){
         this->VI_V[this->_num_pt] = (Vmesure / __FACTEUR_ECHELLE_TENSION__);         //Calibration de la tension
         
         //Affichage des mesures effectuées
-        Serial.printf("VI %d %3.3f %3.3f  \r\n", this->_num_pt, this->VI_V[this->_num_pt], this->VI_I[this->_num_pt]);
-    
+        #ifdef __DEBUG__
+            Serial.printf("VI %d %3.3f %3.3f  \r\n", this->_num_pt, this->VI_V[this->_num_pt], this->VI_I[this->_num_pt]);
+        #endif
     }
 
 }

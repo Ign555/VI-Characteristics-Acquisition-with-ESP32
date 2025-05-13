@@ -7,7 +7,7 @@ typedef struct CANMessage
   bool RTR = false;
   unsigned int id = 0;
   char len = 0;
-  unsigned char data[8] = {0};
+  unsigned char data[512] = {0};
 } CANMessage;
 
 void onReceive(int packetSize);
