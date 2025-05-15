@@ -21,7 +21,7 @@
 
 #define __ADDRESSE_CAPTEUR_TC74__ 0x48 //Addresse du TC74
 #define __N_BP__ 5 //Nombre d'interrupteur connecté ( DIP SWITCH )
-#define __COEFF_TEMPS_REPONSE__ 100 //Delai que prend une carte pour répondre = __COEFF_DELAI_CAN__ * numero_de_carte
+#define __COEFF_TEMPS_REPONSE__ 50 //Delai que prend une carte pour répondre = __COEFF_DELAI_CAN__ * numero_de_carte
 
 //#define MAIN_MODE //Décommenter pour 'commander' le bus CAN avec la carte
 
@@ -43,9 +43,13 @@ void envoyer_caracteristique();
 
 //Déclaration des flags
 bool canAvailable = false;
+bool effectuerMesure = true; //Flag pour effectuer la mesure de température
+
+//Timers
+hw_timer_t *Timer1_Cfg = NULL;
 
 //Variables globales
-uint8_t num_carte = 0;
+uint8_t num_carte = 0, temp; //Numéro de la carte sur le BUS CAN
 
 //Broche du DIP Switch
 uint8_t pin_BP[5] = {25, 26, 27, 14, 13};
@@ -54,12 +58,35 @@ uint8_t pin_BP[5] = {25, 26, 27, 14, 13};
 CANMessage rxMsg;
 Panneau panneau;
 
+/****************************************************************
+*
+* Fonctions d'interruption
+*
+****************************************************************/
+
+void IRAM_ATTR Timer1_ISR()
+{
+  effectuerMesure = true;
+}
+
+/****************************************************************
+*
+* Programme principal
+*
+****************************************************************/
+
 void setup()
 {
 
   //Initialisation du port série
   Serial.begin(115200);
   Serial.println("CARTE VI Mesure Lineaire");
+
+  //Initialisation timer1 pour gérer la mesure ( Interruption toutes les 10 secondes )
+  Timer1_Cfg = timerBegin(1, 80, true);
+  timerAttachInterrupt(Timer1_Cfg, &Timer1_ISR, true);
+  timerAlarmWrite(Timer1_Cfg, 10000000, true); 
+  timerAlarmEnable(Timer1_Cfg);
 
   //Initalisation de l'I2C pour le TC74
   Wire.begin();
@@ -89,6 +116,10 @@ void setup()
 
 void loop()
 {
+  if(effectuerMesure){
+    temp = lireTemperature(__ADDRESSE_CAPTEUR_TC74__);
+    effectuerMesure = false;
+  }
   if (canAvailable == true)
   {
     manageCAN();
@@ -140,7 +171,7 @@ void reception(char ch)
 
     if (commande == "T")
     {
-      Serial.printf("%d\n", lireTemperature(__ADDRESSE_CAPTEUR_TC74__));
+      Serial.printf("%d\n", temp);
     }
 
     chaine = "";
@@ -212,6 +243,11 @@ void manageCAN()
       envoyer_caracteristique();
     break;
 
+    case 8:
+      envoyer_temperature();
+      envoyer_caracteristique();
+    break;
+
     default:
       //On imprime les informations du message
       Serial.print("Message inconnu Data(s) : ");
@@ -239,23 +275,19 @@ void envoyer_ping(){
 
   delay(__COEFF_TEMPS_REPONSE__*num_carte);
 
-  //Envoie des paquets à l'id 10
+  
   Serial.println("Demande d'identification, envoie de la réponse...");
 
+  //Envoie des paquets à l'id 10
   CAN.beginPacket(0xA);
   CAN.endPacket();
 
-  delay(1000);
+  delay(1);
 
 }
 
 //Envoie de la température à la carte CAN
 void envoyer_temperature(){
-
-  int8_t temp;
-
-  //Préparation des informations à envoyer
-  temp = lireTemperature(__ADDRESSE_CAPTEUR_TC74__); 
   
   delay(__COEFF_TEMPS_REPONSE__*num_carte);
 
@@ -269,7 +301,7 @@ void envoyer_temperature(){
   
   CAN.endPacket();
 
-  delay(1000);
+  delay(1);
 
 }
 
@@ -284,7 +316,6 @@ void envoyer_caracteristique(){
 
   delay(__COEFF_TEMPS_REPONSE__*num_carte);
 
-  //Envoie des paquets à l'id 12 ( mesure )
   Serial.println("Envoie de la caractéristique VI...");
 
   //Pour chaque mesure effectuée
@@ -298,6 +329,7 @@ void envoyer_caracteristique(){
     float_to_bytes(&V_measure_buffer, V_buffer);
     float_to_bytes(&I_measure_buffer, I_buffer);
 
+    //Envoie des paquets à l'id 12 ( mesure )
     CAN.beginPacket(0xC);
     CAN.write(panneau.get_nombre_de_mesures());
     CAN.write(i);
@@ -309,6 +341,7 @@ void envoyer_caracteristique(){
 
     CAN.endPacket();
 
+    //Envoie des paquets à l'id 13 ( mesure )
     CAN.beginPacket(0xD);
     CAN.write(panneau.get_nombre_de_mesures());
     CAN.write(i);
@@ -322,7 +355,7 @@ void envoyer_caracteristique(){
     
     delay(10);
 
-}
+  }
 
   delay(1000);
 
