@@ -97,7 +97,7 @@ void Panneau::_mesuse_Icc(){
 
     ledcWrite(__CANAL_PWM__, __DUTY_ICC__); // Mise en court-circuit du PV
     
-    delay(__DELAI_TRANSISTOR__); // Attente du 100 ms ( pour donner le temps au transistor ?? )
+    delay(__DELAI_TRANSISTOR__); // Attente de __DELAI_TRANSISTOR__ ( pour donner le temps au transistor ?? )
 
     //Somme des mesures de la tension Ushunt amplifiée
     for (int i = 0; i < __N_MESURE__; i++){
@@ -124,7 +124,7 @@ void Panneau::_mesure_Voc(){
 
     ledcWrite(__CANAL_PWM__, __DUTY_VOC__); // Connexion de R0 = 22 Ohn entre les bornes du panneau
 
-    delay(__DELAI_TRANSISTOR__); // Attente du 100 ms ( pour donner le temps au transistor ?? )
+    delay(__DELAI_TRANSISTOR__); // Attente de __DELAI_TRANSISTOR__ ms ( pour donner le temps au transistor ?? )
     
     //Somme des mesures de la tension à la sortie du pont diviseur
     for (int i = 0; i < __N_MESURE__; i++)
@@ -155,10 +155,10 @@ void Panneau::_zone_V_constante(int nbr_ptI){
     //Stockage / Calcul des différentes caractéristique dans la zone où la tension est constante ( V, I, Req, dty )
     for(this->_num_pt = 1; this->_num_pt <= nbr_ptI; this->_num_pt++){
 
-        //à commenter
+        //Calcul de la valeur d'incrémentation du courant permettant de calculer la résistance équivalente appliqué au panneau
         deltaI = (this->Icc - Imin) / (nbr_ptI - 1);
         
-        //Mesure des résistance équivalentes
+        //Calcul des résistance équivalentes
         this->I[this->_num_pt] = Imin + (this->_num_pt - 1) * deltaI; //Calcul de I ( Formule à mettre )
         this->V[this->_num_pt] = Voc; //On est dans la zone où V est constant donc c'est Voc
 
@@ -188,10 +188,10 @@ void Panneau::_zone_I_constant(int nbr_ptI, int nbr_ptV){
 
     for(this->_num_pt =  this->_num_pt; this->_num_pt < (nbr_ptV + nbr_ptI); this->_num_pt++){
 
-        //à commenter
+        //Calcul de la valeur d'incrémentation de la tension permettant de calculer la résistance équivalente appliqué au panneau
         deltaV = this->Voc / (nbr_ptV - 1);
         
-        //Mesure des résistance équivalentes
+        //Calcul des résistance équivalentes
         this->I[this->_num_pt] = Icc; //On est dans la zone où I est constant donc c'est Icc
         this->V[this->_num_pt] = Voc - (this->_num_pt - nbr_ptI) * deltaV; //Calcul de V ( Formule à mettre )
 
@@ -232,7 +232,7 @@ void Panneau::_mesure_point_caracteristique(){
 
         ledcWrite(__CANAL_PWM__, (int)(dty[this->_num_pt]*__DUTY_ICC__)); // Connexion du panneau à la résistance + hachage de cette dernière pour moduler le courant
 
-        delay(__DELAI_TRANSISTOR__); // Attente du 100 ms ( pour donner le temps au transistor ?? )
+        delay(__DELAI_TRANSISTOR__); // Attente de __DELAI_TRANSISTOR__ ms ( pour donner le temps au transistor ?? )
         
         Vmesure = 0;
         Vcourant_ampli = 0;

@@ -79,7 +79,8 @@ class Panneau{
 
         uint8_t _nbr_mesure; //Nombre de mesure effectuée lors de la dernière caractérisation
         int _num_pt;
-
+        
+        //Mesure et calcul de la des points caractéristiques  ( linéaire ) 
         void _mesuse_Icc();
         void _mesure_Voc();
 
