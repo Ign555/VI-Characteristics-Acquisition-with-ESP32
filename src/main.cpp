@@ -43,13 +43,13 @@ void envoyer_caracteristique();
 
 //Déclaration des flags
 bool canAvailable = false;
-bool effectuerMesure = true; //Flag pour effectuer la mesure de température
 
 //Timers
 hw_timer_t *Timer1_Cfg = NULL;
 
 //Variables globales
-uint8_t num_carte = 0, temp; //Numéro de la carte sur le BUS CAN
+uint8_t num_carte = 0; //Numéro de la carte sur le BUS CAN
+uint8_t temp; //Température exterrieur ( lecture avec le TC74 )
 
 //Broche du DIP Switch
 uint8_t pin_BP[5] = {25, 26, 27, 14, 13};
@@ -57,17 +57,6 @@ uint8_t pin_BP[5] = {25, 26, 27, 14, 13};
 //Déclaration des périphériques
 CANMessage rxMsg;
 Panneau panneau;
-
-/****************************************************************
-*
-* Fonctions d'interruption
-*
-****************************************************************/
-
-void IRAM_ATTR Timer1_ISR()
-{
-  effectuerMesure = true;
-}
 
 /****************************************************************
 *
@@ -81,12 +70,6 @@ void setup()
   //Initialisation du port série
   Serial.begin(115200);
   Serial.println("CARTE VI Mesure Lineaire");
-
-  //Initialisation timer1 pour gérer la mesure ( Interruption toutes les 10 secondes )
-  Timer1_Cfg = timerBegin(1, 80, true);
-  timerAttachInterrupt(Timer1_Cfg, &Timer1_ISR, true);
-  timerAlarmWrite(Timer1_Cfg, 10000000, true); 
-  timerAlarmEnable(Timer1_Cfg);
 
   //Initalisation de l'I2C pour le TC74
   Wire.begin();
@@ -116,10 +99,6 @@ void setup()
 
 void loop()
 {
-  if(effectuerMesure){
-    temp = lireTemperature(__ADDRESSE_CAPTEUR_TC74__);
-    effectuerMesure = false;
-  }
   if (canAvailable == true)
   {
     manageCAN();
@@ -289,16 +268,18 @@ void envoyer_ping(){
 //Envoie de la température à la carte CAN
 void envoyer_temperature(){
   
+  //Lecture du capteur de température
+  temp = lireTemperature(__ADDRESSE_CAPTEUR_TC74__);
+
   delay(__COEFF_TEMPS_REPONSE__*num_carte);
 
+  #ifdef __DEBUG__
+    Serial.println("Envoie de la température...");
+  #endif
+
   //Envoie des paquets à l'id 11 ( température )
-  Serial.println("Envoie de la température...");
-
   CAN.beginPacket(0xB);
-
-  //Mise de la valeur de la température dans le paquet
-  CAN.write(temp);
-  
+  CAN.write(temp); //Mise de la valeur de la température dans le paquet
   CAN.endPacket();
 
   delay(1);
