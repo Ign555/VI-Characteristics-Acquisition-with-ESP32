@@ -46,7 +46,7 @@
 #define __SEUIL_ANALOGREADMILLIVOLT_ESP32__ 142 // Valeur minimum donnée par la fonction analogReadMillivolt ( voir vidéo Discours )
 
 //Délai e
-#define __DELAI_TRANSISTOR__ 1
+#define __DELAI_PV__ 1 //Délai du aux constantes de temps du panneaux
 
 /****************************************************************
 *
@@ -73,7 +73,7 @@ class Panneau{
         float Icc, Voc; // _S_Vcourant_ampli => Somme des tensions relevées en sortie de l'Ampli ( panneau en court-circuit ), 
                                     // Icc => Courant moyen relevée ( panneau en court-circuit )
 
-        float I[60], V[60]; 
+        float I[60], V[60];  //Tableau qui stock les tensions et les courants pour le calculs des résistances équivalente
         float VI_I[60], VI_V[60]; //Tableaux stockant les points caractéristiques
         float Req[60], dty[60]; //Tableau stockant les résistances équivatentes / Tableau stockant les rapports cyliques associés 
 

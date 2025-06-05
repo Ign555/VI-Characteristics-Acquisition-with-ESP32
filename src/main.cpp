@@ -21,6 +21,7 @@
 
 #define __ADDRESSE_CAPTEUR_TC74__ 0x48 //Addresse du TC74
 #define __N_BP__ 5 //Nombre d'interrupteur connecté ( DIP SWITCH )
+#define __DELAI_CAN__ 1  //Délai pour que l'on impose après l'envoie d'un paquet sur le CAN pour être sûr qu'il s'envoie bien
 #define __COEFF_TEMPS_REPONSE__ 50 //Delai que prend une carte pour répondre = __COEFF_DELAI_CAN__ * numero_de_carte
 
 //#define MAIN_MODE //Décommenter pour 'commander' le bus CAN avec la carte
@@ -83,10 +84,12 @@ void setup()
   //Lecture des broches liées au DIP switch ( détermination du numéro de la carte )
   for(int i = 1 ; i < __N_BP__ ; i++)
   {
+
     if(digitalRead(pin_BP[i-1]) == LOW){
       num_carte = i;
       break;
     }
+
   }
   
   //Initialisation bus CAN
@@ -99,10 +102,12 @@ void setup()
 
 void loop()
 {
+
   if (canAvailable == true)
   {
     manageCAN();
   }
+
 }
 
 /****************************************************************
@@ -121,6 +126,7 @@ void serialEvent()
 
 void reception(char ch)
 {
+
   static int i = 0;
   static String chaine = "";
   String commande;
@@ -159,6 +165,7 @@ void reception(char ch)
   {
     chaine += ch;
   }
+
 }
 
 /****************************************************************
@@ -259,9 +266,10 @@ void envoyer_ping(){
 
   //Envoie des paquets à l'id 10
   CAN.beginPacket(0xA);
+  CAN.beginPacket(num_carte);
   CAN.endPacket();
 
-  delay(1);
+  delay(__DELAI_CAN__);
 
 }
 
@@ -282,7 +290,7 @@ void envoyer_temperature(){
   CAN.write(temp); //Mise de la valeur de la température dans le paquet
   CAN.endPacket();
 
-  delay(1);
+  delay(__DELAI_CAN__);
 
 }
 
@@ -307,8 +315,8 @@ void envoyer_caracteristique(){
     I_measure_buffer = panneau.get_mesure_I(i);
 
     //Convertion des mesures
-    float_to_bytes(&V_measure_buffer, V_buffer);
-    float_to_bytes(&I_measure_buffer, I_buffer);
+    memcpy(V_buffer, &V_measure_buffer, sizeof(float));
+    memcpy(I_buffer, &I_measure_buffer, sizeof(float));
 
     //Envoie des paquets à l'id 12 ( mesure )
     CAN.beginPacket(0xC);
@@ -334,10 +342,10 @@ void envoyer_caracteristique(){
 
     CAN.endPacket();
     
-    delay(10);
+    delay(__DELAI_CAN__);
 
   }
 
-  delay(1000);
+  delay(__DELAI_CAN__);
 
 }

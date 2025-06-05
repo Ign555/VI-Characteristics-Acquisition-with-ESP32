@@ -97,7 +97,7 @@ void Panneau::_mesuse_Icc(){
 
     ledcWrite(__CANAL_PWM__, __DUTY_ICC__); // Mise en court-circuit du PV
     
-    delay(__DELAI_TRANSISTOR__); // Attente de __DELAI_TRANSISTOR__ ( pour donner le temps au transistor ?? )
+    delay(__DELAI_PV__); // Attente de __DELAI_PV__ ( pour donner le temps au transistor ?? )
 
     //Somme des mesures de la tension Ushunt amplifiée
     for (int i = 0; i < __N_MESURE__; i++){
@@ -124,7 +124,7 @@ void Panneau::_mesure_Voc(){
 
     ledcWrite(__CANAL_PWM__, __DUTY_VOC__); // Connexion de R0 = 22 Ohn entre les bornes du panneau
 
-    delay(__DELAI_TRANSISTOR__); // Attente de __DELAI_TRANSISTOR__ ms ( pour donner le temps au transistor ?? )
+    delay(__DELAI_PV__); // Attente de __DELAI_PV__ ms ( pour donner le temps au transistor ?? )
     
     //Somme des mesures de la tension à la sortie du pont diviseur
     for (int i = 0; i < __N_MESURE__; i++)
@@ -232,7 +232,7 @@ void Panneau::_mesure_point_caracteristique(){
 
         ledcWrite(__CANAL_PWM__, (int)(dty[this->_num_pt]*__DUTY_ICC__)); // Connexion du panneau à la résistance + hachage de cette dernière pour moduler le courant
 
-        delay(__DELAI_TRANSISTOR__); // Attente de __DELAI_TRANSISTOR__ ms ( pour donner le temps au transistor ?? )
+        delay(__DELAI_PV__); // Attente de __DELAI_PV__ ms ( pour donner le temps au transistor ?? )
         
         Vmesure = 0;
         Vcourant_ampli = 0;
