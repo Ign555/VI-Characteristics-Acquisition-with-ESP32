@@ -22,7 +22,7 @@
 #define __ADDRESSE_CAPTEUR_TC74__ 0x48 //Addresse du TC74
 #define __N_BP__ 5 //Nombre d'interrupteur connecté ( DIP SWITCH )
 #define __DELAI_CAN__ 1  //Délai pour que l'on impose après l'envoie d'un paquet sur le CAN pour être sûr qu'il s'envoie bien
-#define __COEFF_TEMPS_REPONSE__ 50 //Delai que prend une carte pour répondre = __COEFF_DELAI_CAN__ * numero_de_carte
+#define __COEFF_TEMPS_REPONSE__ 100 //Delai que prend une carte pour répondre = __COEFF_DELAI_CAN__ * numero_de_carte
 
 //#define MAIN_MODE //Décommenter pour 'commander' le bus CAN avec la carte
 
@@ -44,9 +44,6 @@ void envoyer_caracteristique();
 
 //Déclaration des flags
 bool canAvailable = false;
-
-//Timers
-hw_timer_t *Timer1_Cfg = NULL;
 
 //Variables globales
 uint8_t num_carte = 0; //Numéro de la carte sur le BUS CAN
@@ -232,6 +229,10 @@ void manageCAN()
     case 8:
       envoyer_temperature();
       envoyer_caracteristique();
+    break;
+    
+    case 127: //En cas d'ID 127 ( demande de redémarrage )
+      ESP.restart();
     break;
 
     default:
