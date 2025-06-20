@@ -21,7 +21,7 @@
 
 #define __ADDRESSE_CAPTEUR_TC74__ 0x48 //Addresse du TC74
 #define __N_BP__ 5 //Nombre d'interrupteur connecté ( DIP SWITCH )
-#define __DELAI_CAN__ 1  //Délai pour que l'on impose après l'envoie d'un paquet sur le CAN pour être sûr qu'il s'envoie bien
+#define __DELAI_CAN__ 10  //Délai pour que l'on impose après l'envoie d'un paquet sur le CAN pour être sûr qu'il s'envoie bien
 #define __COEFF_TEMPS_REPONSE__ 100 //Delai que prend une carte pour répondre = __COEFF_DELAI_CAN__ * numero_de_carte
 
 //#define MAIN_MODE //Décommenter pour 'commander' le bus CAN avec la carte
@@ -262,12 +262,11 @@ void envoyer_ping(){
 
   delay(__COEFF_TEMPS_REPONSE__*num_carte);
 
-  
   Serial.println("Demande d'identification, envoie de la réponse...");
 
   //Envoie des paquets à l'id 10
   CAN.beginPacket(0xA);
-  CAN.beginPacket(num_carte);
+  CAN.write(num_carte);
   CAN.endPacket();
 
   delay(__DELAI_CAN__);
@@ -330,6 +329,8 @@ void envoyer_caracteristique(){
     }
 
     CAN.endPacket();
+
+    delay(__DELAI_CAN__);
 
     //Envoie des paquets à l'id 13 ( mesure )
     CAN.beginPacket(0xD);
