@@ -2,7 +2,7 @@
 *
 *
 * Programme mesure caractéristique VI ( linéaire )
-* Created by Vorachack Kongphet
+* Created by Vorachack Kongphet 
 * Version : v1.1
 * 
 *
@@ -24,8 +24,6 @@
 #define __DELAI_CAN__ 10  //Délai pour que l'on impose après l'envoie d'un paquet sur le CAN pour être sûr qu'il s'envoie bien
 #define __COEFF_TEMPS_REPONSE__ 100 //Delai que prend une carte pour répondre = __COEFF_DELAI_CAN__ * numero_de_carte
 
-//#define MAIN_MODE //Décommenter pour 'commander' le bus CAN avec la carte
-
 int nbPtI = 12; // number of points lower part
 int nbPtV = 15; // number of points upper part
 
@@ -46,7 +44,7 @@ void envoyer_caracteristique();
 bool canAvailable = false;
 
 //Variables globales
-uint8_t num_carte = 0; //Numéro de la carte sur le BUS CAN
+uint8_t num_carte = 0; //Numéro de la carte par défaut sur le BUS CAN
 uint8_t temp; //Température exterrieur ( lecture avec le TC74 )
 
 //Broche du DIP Switch
@@ -320,6 +318,7 @@ void envoyer_caracteristique(){
 
     //Envoie des paquets à l'id 12 ( mesure )
     CAN.beginPacket(0xC);
+    CAN.write(num_carte);
     CAN.write(panneau.get_nombre_de_mesures());
     CAN.write(i);
 
@@ -334,6 +333,7 @@ void envoyer_caracteristique(){
 
     //Envoie des paquets à l'id 13 ( mesure )
     CAN.beginPacket(0xD);
+    CAN.write(num_carte);
     CAN.write(panneau.get_nombre_de_mesures());
     CAN.write(i);
 

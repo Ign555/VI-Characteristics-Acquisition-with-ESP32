@@ -152,7 +152,7 @@ void Panneau::_zone_V_constante(int nbr_ptI){
     //Calcul de la valeur minimal du courant
     Imin = this->Voc / __VALEUR_R0__;
 
-    //Stockage / Calcul des différentes caractéristique dans la zone où la tension est constante ( V, I, Req, dty )
+    //Stockage / Calcul des différents paramètres dans la zone où la tension est constante ( V, I, Req, dty )
     for(this->_num_pt = 1; this->_num_pt <= nbr_ptI; this->_num_pt++){
 
         //Calcul de la valeur d'incrémentation du courant permettant de calculer la résistance équivalente appliqué au panneau
